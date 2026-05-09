@@ -1,15 +1,4 @@
-/*
- * ============================================================================
- * Swift-Load Logistics - Data Structures & Algorithms System
- * Unit 19: Final Assignment
- * ============================================================================
- * This program implements a comprehensive logistics management system for
- * Swift-Load Logistics, demonstrating multiple data structures and algorithms
- * including: Goods ADT with encapsulation, FIFO Queue, Bubble Sort, QuickSort,
- * Memory Stack simulation, AVL Tree for warehouse inventory, and Linear Search
- * for performance comparison.
- * ============================================================================
- */
+/* Swift-Load Logistics System */
 
 #include <iostream>
 #include <string>
@@ -22,25 +11,21 @@
 #include <stack>
 #include <functional>
 
+// Note: using namespace std is acceptable for small scripts, but in production
+// C++ code it is discouraged to prevent namespace pollution and naming collisions.
 using namespace std;
 using namespace std::chrono;
 
-// ============================================================================
-// TASK 1 - P1, M3, D2: Goods ADT with Encapsulation
-// ============================================================================
-// The Goods class demonstrates a well-designed Abstract Data Type (ADT) with
-// full data encapsulation. All member variables are private and accessed
-// exclusively through validated getter/setter methods.
-// ============================================================================
+// Goods class to represent logistics items securely
 class Goods {
 private:
-    // Private member variables - Information Hiding (M3)
+    // internal data 
     string name;
     string type;
     double weight;
 
 public:
-    // --- Constructor (Initialization) ---
+    // constructor setup
     // Pre-condition:  weight >= 0, name should not be empty for valid goods
     // Post-condition: A Goods object with validated attributes is created
     Goods(string name = "Unnamed", string type = "", double weight = 0.0) {
@@ -57,13 +42,13 @@ public:
     }
 
     // --- Accessor Methods (Getters) ---
-    // These provide read-only access to private data
+    // getters to safely read data
     string getName() const { return name; }
     string getType() const { return type; }
     double getWeight() const { return weight; }
 
     // --- Mutator Methods (Setters) with Validation ---
-    // These enforce business rules before modifying data
+    // making sure no one inputs a negative weight or empty string
     void setName(const string& newName) {
         if (newName.empty())
             throw invalid_argument("Name cannot be empty");
@@ -85,65 +70,50 @@ public:
     }
 };
 
-// ============================================================================
-// TASK 1 - M2 & TASK 2 - P7: Sorting Algorithms with Performance Measurement
-// ============================================================================
-
 // --- Bubble Sort (Descending Order) ---
-// Time Complexity: O(N^2) average and worst case
-// Space Complexity: O(1) - in-place sorting
-long long bubbleSortComparisons = 0;
-long long bubbleSortSwaps = 0;
-
-void bubbleSort(vector<double>& arr) {
+// slow but simple sort
+void bubbleSort(vector<double>& arr, long long& comps, long long& swaps) {
     size_t n = arr.size();
-    bubbleSortComparisons = 0;
-    bubbleSortSwaps = 0;
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            bubbleSortComparisons++;
+    comps = 0;
+    swaps = 0;
+    for (size_t i = 0; i < n - 1; i++) {
+        for (size_t j = 0; j < n - i - 1; j++) {
+            comps++;
             if (arr[j] < arr[j + 1]) {  // < for descending order
                 swap(arr[j], arr[j + 1]);
-                bubbleSortSwaps++;
+                swaps++;
             }
         }
     }
 }
 
 // --- QuickSort (Descending Order) ---
-// Time Complexity: O(N log N) average case, O(N^2) worst case
-// Space Complexity: O(log N) for recursive stack frames
-long long quickSortComparisons = 0;
-long long quickSortSwaps = 0;
+// fast recursive sort
 
-int partition(vector<double>& arr, int low, int high) {
+int partition(vector<double>& arr, int low, int high, long long& comps, long long& swaps) {
     double pivot = arr[high];
     int i = (low - 1);
 
     for (int j = low; j <= high - 1; j++) {
-        quickSortComparisons++;
+        comps++;
         if (arr[j] > pivot) {  // > for descending order
             i++;
             swap(arr[i], arr[j]);
-            quickSortSwaps++;
+            swaps++;
         }
     }
     swap(arr[i + 1], arr[high]);
-    quickSortSwaps++;
+    swaps++;
     return (i + 1);
 }
 
-void quickSort(vector<double>& arr, int low, int high) {
+void quickSort(vector<double>& arr, int low, int high, long long& comps, long long& swaps) {
     if (low < high) {
-        int pi = partition(arr, low, high);
-        quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
+        int pi = partition(arr, low, high, comps, swaps);
+        quickSort(arr, low, pi - 1, comps, swaps);
+        quickSort(arr, pi + 1, high, comps, swaps);
     }
 }
-
-// ============================================================================
-// TASK 3 - P4, M4, P5, D3: AVL Tree Implementation
-// ============================================================================
 
 class AVLNode {
 public:
@@ -161,14 +131,12 @@ private:
     int nodeCount;
     int searchComparisons;  // Track comparisons for D3 analysis
 
-    int height(AVLNode* N) {
+    int height(AVLNode* N) const {
         if (N == nullptr) return 0;
         return N->height;
     }
 
-    int max(int a, int b) {
-        return (a > b) ? a : b;
-    }
+    // using built-in max
 
     // --- Right Rotation (for Left-Left imbalance) ---
     AVLNode* rightRotate(AVLNode* y) {
@@ -199,19 +167,19 @@ private:
     }
 
     // --- Balance Factor Calculation ---
-    int getBalance(AVLNode* N) {
+    int getBalance(AVLNode* N) const {
         if (N == nullptr) return 0;
         return height(N->left) - height(N->right);
     }
 
     // --- Insert with Self-Balancing ---
     AVLNode* insertNode(AVLNode* node, Goods item) {
-        // P5: Robustness - validate input before insertion
+        // validate input before insertion
         if (item.getName().empty()) {
             throw invalid_argument("Cannot insert item with empty name.");
         }
 
-        // Standard BST insertion
+        // normal insert first
         if (node == nullptr) {
             nodeCount++;
             return (new AVLNode(item));
@@ -230,21 +198,21 @@ private:
         // Calculate balance factor
         int balance = getBalance(node);
 
-        // Left Left Case
+        // heavy on the left
         if (balance > 1 && item.getName() < node->left->data.getName())
             return rightRotate(node);
 
-        // Right Right Case
+        // heavy on the right
         if (balance < -1 && item.getName() > node->right->data.getName())
             return leftRotate(node);
 
-        // Left Right Case
+        // zigzag left-right
         if (balance > 1 && item.getName() > node->left->data.getName()) {
             node->left = leftRotate(node->left);
             return rightRotate(node);
         }
 
-        // Right Left Case
+        // zigzag right-left
         if (balance < -1 && item.getName() < node->right->data.getName()) {
             node->right = rightRotate(node->right);
             return leftRotate(node);
@@ -293,14 +261,27 @@ private:
         }
     }
 
+    // --- Post-Order Traversal for Memory Cleanup ---
+    void destroyTree(AVLNode* node) {
+        if (node != nullptr) {
+            destroyTree(node->left);
+            destroyTree(node->right);
+            delete node;
+        }
+    }
+
 public:
     AVLTree() : root(nullptr), nodeCount(0), searchComparisons(0) {}
+
+    ~AVLTree() {
+        destroyTree(root);
+    }
 
     void insert(Goods item) {
         try {
             root = insertNode(root, item);
         } catch (const exception& e) {
-            cout << "  [ERROR] " << e.what() << endl;
+            cout << "  " << e.what() << endl;
         }
     }
 
@@ -338,23 +319,17 @@ public:
     int getTreeHeight() const { return height(root); }
 };
 
-// ============================================================================
-// TASK 3 - D3: Linear Search for Comparison
-// ============================================================================
-int linearSearch(const vector<Goods>& inventory, const string& key) {
+pair<int, bool> linearSearch(const vector<Goods>& inventory, const string& key) {
     int comparisons = 0;
     for (size_t i = 0; i < inventory.size(); i++) {
         comparisons++;
         if (inventory[i].getName() == key) {
-            return comparisons;
+            return {comparisons, true};
         }
     }
-    return comparisons;  // Not found, searched everything
+    return {comparisons, false};  // Not found, searched everything
 }
 
-// ============================================================================
-// TASK 2 - P2: Stack Operations Demonstration
-// ============================================================================
 void demonstrateStack() {
     cout << "=== Stack Operations Demonstration (LIFO) ===" << endl;
     stack<string> callStack;
@@ -387,19 +362,15 @@ void demonstrateStack() {
     cout << "  Stack is empty: " << (callStack.empty() ? "Yes" : "No") << endl;
 }
 
-// ============================================================================
 // MAIN FUNCTION - Complete System Demonstration
-// ============================================================================
 int main() {
     cout << "==========================================================" << endl;
     cout << "   Swift-Load Logistics - System Execution Output" << endl;
     cout << "   Data Structures & Algorithms - Final Assignment" << endl;
     cout << "==========================================================" << endl << endl;
 
-    // -----------------------------------------------------------------------
-    // SECTION 1: Goods ADT Demonstration (P1, M3)
-    // -----------------------------------------------------------------------
-    cout << "=== [P1, M3] Goods ADT & Encapsulation Demo ===" << endl;
+        
+        cout << "=== Goods ADT & Encapsulation Demo ===" << endl;
     cout << "\nCreating valid goods:" << endl;
     Goods laptop("Laptop", "Electronics", 2.5);
     Goods desk("Desk", "Furniture", 25.0);
@@ -428,10 +399,8 @@ int main() {
         cout << "  Attempt to set name='': CAUGHT -> " << e.what() << endl;
     }
 
-    // -----------------------------------------------------------------------
-    // SECTION 2: Queue Illustration (M1)
-    // -----------------------------------------------------------------------
-    cout << "\n=== [M1] Queue Illustration (FIFO for Loading Bay) ===" << endl;
+        
+        cout << "\n=== Queue Illustration (FIFO for Loading Bay) ===" << endl;
     queue<string> truckQueue;
 
     cout << "\nEnqueue operations:" << endl;
@@ -452,16 +421,12 @@ int main() {
         truckQueue.pop();
     }
 
-    // -----------------------------------------------------------------------
-    // SECTION 3: Stack Operations (P2)
-    // -----------------------------------------------------------------------
-    cout << "\n";
+        
+        cout << "\n";
     demonstrateStack();
 
-    // -----------------------------------------------------------------------
-    // SECTION 4: Sorting Comparison (M2) & Efficiency Measurement (P7)
-    // -----------------------------------------------------------------------
-    cout << "\n=== [M2, P7] Sorting Algorithms & Efficiency ===" << endl;
+        
+        cout << "\n=== Sorting Algorithms & Efficiency ===" << endl;
     vector<double> weights = {45.5, 12.0, 89.2, 5.5, 34.1, 100.0, 77.8, 23.4, 56.7, 9.9, 41.2, 60.0};
 
     cout << "\nOriginal 12 cargo weights:" << endl << "  ";
@@ -471,49 +436,47 @@ int main() {
     // Bubble Sort
     vector<double> bubbleWeights = weights;
     auto start = high_resolution_clock::now();
-    bubbleSort(bubbleWeights);
+    long long bubbleComps = 0, bubbleSwaps = 0;
+    bubbleSort(bubbleWeights, bubbleComps, bubbleSwaps);
     auto stop = high_resolution_clock::now();
     auto bubbleDuration = duration_cast<nanoseconds>(stop - start);
 
     cout << "\nBubble Sort (Descending):" << endl << "  ";
     for (double w : bubbleWeights) cout << w << " ";
     cout << "\n  Execution Time:  " << bubbleDuration.count() << " nanoseconds";
-    cout << "\n  Comparisons:     " << bubbleSortComparisons;
-    cout << "\n  Swaps:           " << bubbleSortSwaps << endl;
+    cout << "\n  Comparisons:     " << bubbleComps;
+    cout << "\n  Swaps:           " << bubbleSwaps << endl;
 
     // QuickSort
     vector<double> quickWeights = weights;
     start = high_resolution_clock::now();
-    quickSortComparisons = 0;
-    quickSortSwaps = 0;
-    quickSort(quickWeights, 0, quickWeights.size() - 1);
+    long long quickComps = 0, quickSwaps = 0;
+    quickSort(quickWeights, 0, quickWeights.size() - 1, quickComps, quickSwaps);
     stop = high_resolution_clock::now();
     auto quickDuration = duration_cast<nanoseconds>(stop - start);
 
     cout << "\nQuickSort (Descending):" << endl << "  ";
     for (double w : quickWeights) cout << w << " ";
     cout << "\n  Execution Time:  " << quickDuration.count() << " nanoseconds";
-    cout << "\n  Comparisons:     " << quickSortComparisons;
-    cout << "\n  Swaps:           " << quickSortSwaps << endl;
+    cout << "\n  Comparisons:     " << quickComps;
+    cout << "\n  Swaps:           " << quickSwaps << endl;
 
     // Performance Summary Table
     cout << "\n  +------------------+---------------+--------+-------+" << endl;
     cout << "  | Algorithm        | Time (ns)     | Comps  | Swaps |" << endl;
     cout << "  +------------------+---------------+--------+-------+" << endl;
     cout << "  | Bubble Sort      | " << left << setw(14) << bubbleDuration.count()
-         << "| " << setw(7) << bubbleSortComparisons << "| " << setw(6) << bubbleSortSwaps << "|" << endl;
+         << "| " << setw(7) << bubbleComps << "| " << setw(6) << bubbleSwaps << "|" << endl;
     cout << "  | QuickSort        | " << left << setw(14) << quickDuration.count()
-         << "| " << setw(7) << quickSortComparisons << "| " << setw(6) << quickSortSwaps << "|" << endl;
+         << "| " << setw(7) << quickComps << "| " << setw(6) << quickSwaps << "|" << endl;
     cout << "  +------------------+---------------+--------+-------+" << endl;
 
-    // -----------------------------------------------------------------------
-    // SECTION 5: AVL Tree Implementation (P4, M4) & Robustness (P5)
-    // -----------------------------------------------------------------------
-    cout << "\n=== [P4, M4, P5] AVL Tree & Robustness Testing ===" << endl;
+        
+        cout << "\n=== AVL Tree & Robustness Testing ===" << endl;
     AVLTree inventory;
 
-    // P5: Robustness - Error handling tests
-    cout << "\n--- Robustness Test Results (P5) ---" << endl;
+    // testing bad inputs
+    cout << "\n--- Robustness Test Results  ---" << endl;
 
     cout << "Test 1: Creating Goods with negative weight..." << endl;
     try {
@@ -550,7 +513,7 @@ int main() {
         cout << "  PASS: " << e.what() << endl;
     }
 
-    cout << "Test 5 (T9): Inserting duplicate key..." << endl;
+    cout << "Test 5: Inserting duplicate key..." << endl;
     Goods dup1("Monitor", "Electronics", 4.0);
     inventory.insert(dup1); // First insert succeeds
     Goods dup2("Monitor", "Electronics", 4.0);
@@ -559,10 +522,10 @@ int main() {
     // Insert valid goods into AVL Tree
     cout << "\n--- Inserting Valid Inventory Items ---" << endl;
     vector<Goods> itemList = {
+        Goods("Monitor", "Electronics", 4.0), // Added to vector so linear search dataset syncs with AVL
         Goods("Laptop", "Electronics", 2.5),
         Goods("Desk", "Furniture", 25.0),
         Goods("Apples", "Food", 50.0),
-        // Monitor is already inserted in Test 5
         Goods("Chair", "Furniture", 12.0),
         Goods("Tablet", "Electronics", 1.5),
         Goods("Printer", "Electronics", 8.0),
@@ -582,10 +545,8 @@ int main() {
     cout << "  Tree Height: " << inventory.getTreeHeight() << endl;
     cout << "  Total Nodes: " << inventory.getNodeCount() << endl;
 
-    // -----------------------------------------------------------------------
-    // SECTION 6: Search Performance - AVL vs Linear Search (D3)
-    // -----------------------------------------------------------------------
-    cout << "\n=== [D3] AVL Tree vs Linear Search Comparison ===" << endl;
+        
+        cout << "\n=== AVL Tree vs Linear Search Comparison ===" << endl;
 
     string searchKeys[] = {"Monitor", "Tablet", "Bananas", "Keyboard"};
 
@@ -599,22 +560,22 @@ int main() {
         int avlComps = inventory.getSearchComparisons();
 
         // Linear search
-        int linearComps = linearSearch(itemList, key);
+        pair<int, bool> linearResult = linearSearch(itemList, key);
+        int linearComps = linearResult.first;
+        bool linearFound = linearResult.second;
 
         cout << "  | " << left << setw(10) << key
              << "| " << setw(4) << avlComps << (avlResult ? " (Found)        " : " (Not Found)    ")
              << "| " << setw(4) << linearComps
-             << ((linearComps <= (int)itemList.size() && key != "Keyboard") ? " (Found)        " : " (Not Found)    ")
+             << (linearFound ? " (Found)        " : " (Not Found)    ")
              << "|" << endl;
     }
     cout << "  +-----------+---------------------+---------------------+" << endl;
     cout << "\n  Analysis: AVL search is O(log N) while Linear search is O(N)." << endl;
     cout << "  For 1,000,000 items: AVL needs ~20 comparisons vs 1,000,000 for linear." << endl;
 
-    // -----------------------------------------------------------------------
-    // SECTION 7: Memory Usage Comparison (P7)
-    // -----------------------------------------------------------------------
-    cout << "\n=== [P7] Memory Usage Analysis ===" << endl;
+        
+        cout << "\n=== Memory Usage Analysis ===" << endl;
     cout << "  sizeof(Goods):    " << sizeof(Goods) << " bytes" << endl;
     cout << "  sizeof(AVLNode):  " << sizeof(AVLNode) << " bytes" << endl;
     cout << "  Array of 8 items: " << sizeof(Goods) * 8 << " bytes (contiguous)" << endl;
