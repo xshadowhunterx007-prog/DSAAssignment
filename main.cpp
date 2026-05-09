@@ -43,7 +43,11 @@ public:
     // --- Constructor (Initialization) ---
     // Pre-condition:  weight >= 0, name should not be empty for valid goods
     // Post-condition: A Goods object with validated attributes is created
-    Goods(string name = "", string type = "", double weight = 0.0) {
+    Goods(string name = "Unnamed", string type = "", double weight = 0.0) {
+        // Validation order: Name first, then Weight
+        if (name.empty()) {
+            throw invalid_argument("Name cannot be empty");
+        }
         if (weight < 0) {
             throw invalid_argument("Weight cannot be negative");
         }
@@ -92,7 +96,7 @@ long long bubbleSortComparisons = 0;
 long long bubbleSortSwaps = 0;
 
 void bubbleSort(vector<double>& arr) {
-    int n = arr.size();
+    size_t n = arr.size();
     bubbleSortComparisons = 0;
     bubbleSortSwaps = 0;
     for (int i = 0; i < n - 1; i++) {
@@ -218,7 +222,7 @@ private:
         else if (item.getName() > node->data.getName())
             node->right = insertNode(node->right, item);
         else  // Duplicate keys not allowed
-            return node;
+            throw invalid_argument("Key already exists: " + item.getName());
 
         // Update height of ancestor node
         node->height = 1 + max(height(node->left), height(node->right));
@@ -519,9 +523,14 @@ int main() {
         cout << "  PASS: " << e.what() << endl;
     }
 
-    cout << "Test 2: Inserting item with empty name..." << endl;
-    Goods nullGoods("", "Misc", 10.0);
-    inventory.insert(nullGoods);  // Error caught inside insert()
+    cout << "Test 2: Creating item with empty name..." << endl;
+    try {
+        Goods nullGoods("", "Misc", 10.0);
+        inventory.insert(nullGoods);
+        cout << "  FAIL: No exception thrown" << endl;
+    } catch (const invalid_argument& e) {
+        cout << "  PASS: " << e.what() << endl;
+    }
 
     cout << "Test 3: Setting negative weight via setter..." << endl;
     try {
@@ -541,13 +550,19 @@ int main() {
         cout << "  PASS: " << e.what() << endl;
     }
 
+    cout << "Test 5 (T9): Inserting duplicate key..." << endl;
+    Goods dup1("Monitor", "Electronics", 4.0);
+    inventory.insert(dup1); // First insert succeeds
+    Goods dup2("Monitor", "Electronics", 4.0);
+    inventory.insert(dup2); // Second insert will throw and be caught inside insert()
+
     // Insert valid goods into AVL Tree
     cout << "\n--- Inserting Valid Inventory Items ---" << endl;
     vector<Goods> itemList = {
         Goods("Laptop", "Electronics", 2.5),
         Goods("Desk", "Furniture", 25.0),
         Goods("Apples", "Food", 50.0),
-        Goods("Monitor", "Electronics", 4.0),
+        // Monitor is already inserted in Test 5
         Goods("Chair", "Furniture", 12.0),
         Goods("Tablet", "Electronics", 1.5),
         Goods("Printer", "Electronics", 8.0),

@@ -54,21 +54,21 @@ Original 12 cargo weights:
 
 Bubble Sort (Descending):
   100.0 89.2 77.8 60.0 56.7 45.5 41.2 34.1 23.4 12.0 9.9 5.5
-  Execution Time:  11600 nanoseconds
+  Execution Time:  11800 nanoseconds
   Comparisons:     66
   Swaps:           34
 
 QuickSort (Descending):
   100.0 89.2 77.8 60.0 56.7 45.5 41.2 34.1 23.4 12.0 9.9 5.5
-  Execution Time:  11900 nanoseconds
+  Execution Time:  11700 nanoseconds
   Comparisons:     34
   Swaps:           23
 
   +------------------+---------------+--------+-------+
   | Algorithm        | Time (ns)     | Comps  | Swaps |
   +------------------+---------------+--------+-------+
-  | Bubble Sort      | 11600         | 66     | 34    |
-  | QuickSort        | 11900         | 34     | 23    |
+  | Bubble Sort      | 11800         | 66     | 34    |
+  | QuickSort        | 11700         | 34     | 23    |
   +------------------+---------------+--------+-------+
 
 === [P4, M4, P5] AVL Tree & Robustness Testing ===
@@ -76,18 +76,19 @@ QuickSort (Descending):
 --- Robustness Test Results (P5) ---
 Test 1: Creating Goods with negative weight...
   PASS: Weight cannot be negative
-Test 2: Inserting item with empty name...
-  [ERROR] Cannot insert item with empty name.
+Test 2: Creating item with empty name...
+  PASS: Name cannot be empty
 Test 3: Setting negative weight via setter...
   PASS: Weight cannot be negative
 Test 4: Setting empty name via setter...
   PASS: Name cannot be empty
+Test 5 (T9): Inserting duplicate key...
+  [ERROR] Key already exists: Monitor
 
 --- Inserting Valid Inventory Items ---
   Inserting: Laptop
   Inserting: Desk
   Inserting: Apples
-  Inserting: Monitor
   Inserting: Chair
   Inserting: Tablet
   Inserting: Printer
@@ -108,14 +109,14 @@ Tablet              Electronics    1.5        kg
 Total items: 8
 
 --- AVL Tree Structure ---
-Desk (h=4, bf=-1) [ROOT]
-L---- Bananas (h=2, bf=0)
-|     L---- Apples (h=1, bf=0)
-|     R---- Chair (h=1, bf=0)
-R---- Monitor (h=3, bf=-1)
-      L---- Laptop (h=1, bf=0)
-      R---- Tablet (h=2, bf=1)
-            L---- Printer (h=1, bf=0)
+Laptop (h=4, bf=1) [ROOT]
+L---- Chair (h=3, bf=1)
+|     L---- Apples (h=2, bf=-1)
+|     |     R---- Bananas (h=1, bf=0)
+|     R---- Desk (h=1, bf=0)
+R---- Printer (h=2, bf=0)
+      L---- Monitor (h=1, bf=0)
+      R---- Tablet (h=1, bf=0)
   Tree Height: 4
   Total Nodes: 8
 
@@ -124,10 +125,10 @@ R---- Monitor (h=3, bf=-1)
   +-----------+---------------------+---------------------+
   | Search Key| AVL Comparisons     | Linear Comparisons  |
   +-----------+---------------------+---------------------+
-  | Monitor   | 2 (Found)           | 4 (Found)           |
-  | Tablet    | 3 (Found)           | 6 (Found)           |
-  | Bananas   | 2 (Found)           | 8 (Found)           |
-  | Keyboard  | 4 (Not Found)       | 8 (Not Found)       |
+  | Monitor   | 3 (Found)           | 7 (Found)           |
+  | Tablet    | 3 (Found)           | 5 (Found)           |
+  | Bananas   | 4 (Found)           | 7 (Found)           |
+  | Keyboard  | 4 (Not Found)       | 7 (Not Found)       |
   +-----------+---------------------+---------------------+
 
   Analysis: AVL search is O(log N) while Linear search is O(N).

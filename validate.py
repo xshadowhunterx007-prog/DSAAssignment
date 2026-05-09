@@ -1,7 +1,9 @@
 import time
 
 class Goods:
-    def __init__(self, name="", gtype="", weight=0.0):
+    def __init__(self, name="Unnamed", gtype="", weight=0.0):
+        if not name:
+            raise ValueError("Name cannot be empty")
         if weight < 0:
             raise ValueError("Weight cannot be negative")
         self.name = name
@@ -97,7 +99,7 @@ class AVLTree:
         elif item.get_name() > node.data.get_name():
             node.right = self._ins(node.right, item)
         else:
-            return node
+            raise ValueError(f"Key already exists: {item.get_name()}")
         node.height = 1 + max(self._h(node.left), self._h(node.right))
         b = self._bf(node)
         if b > 1 and item.get_name() < node.left.data.get_name():
@@ -277,8 +279,12 @@ def main():
     except Exception as e:
         print(f"  PASS: {e}")
 
-    print("Test 2: Inserting item with empty name...")
-    inventory.insert(Goods("", "Misc", 10.0))
+    print("Test 2: Creating item with empty name...")
+    try:
+        Goods("", "Misc", 10.0)
+        print("  FAIL: No exception thrown")
+    except Exception as e:
+        print(f"  PASS: {e}")
 
     print("Test 3: Setting negative weight via setter...")
     try:
@@ -296,11 +302,15 @@ def main():
     except Exception as e:
         print(f"  PASS: {e}")
 
+    print("Test 5 (T9): Inserting duplicate key...")
+    inventory.insert(Goods("Monitor", "Electronics", 4.0))
+    inventory.insert(Goods("Monitor", "Electronics", 4.0))
+
     item_list = [
         Goods("Laptop", "Electronics", 2.5),
         Goods("Desk", "Furniture", 25.0),
         Goods("Apples", "Food", 50.0),
-        Goods("Monitor", "Electronics", 4.0),
+        # Monitor already inserted
         Goods("Chair", "Furniture", 12.0),
         Goods("Tablet", "Electronics", 1.5),
         Goods("Printer", "Electronics", 8.0),
